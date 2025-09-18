@@ -40,25 +40,25 @@ class ModelRouter:
             
             # 1. Complexity Score Matching (40% weight)
             complexity_match = self._calculate_complexity_match(complexity_score, config)
-            score += complexity_match * 0.4
+            score += complexity_match * 0.6
             if complexity_match > 0.5:
                 reasons.append(f"Complexity match: {complexity_match:.2f}")
             
             # 2. Intent Alignment (25% weight) 
             intent_match = self._calculate_intent_match(primary_intent, config)
-            score += intent_match * 0.25
+            score += intent_match * 0.2
             if intent_match > 0.5:
                 reasons.append(f"Intent alignment: {intent_match:.2f}")
             
             # 3. Domain Specialization (20% weight)
             domain_match = self._calculate_domain_match(primary_domain, config)
-            score += domain_match * 0.2
+            score += domain_match * 0.15
             if domain_match > 0.5:
                 reasons.append(f"Domain specialization: {domain_match:.2f}")
             
             # 4. Key Indicator Presence (15% weight)
             indicator_match = self._calculate_indicator_match(query, model_name, config)
-            score += indicator_match * 0.15
+            score += indicator_match * 0.05
             if indicator_match > 0.5:
                 reasons.append(f"Key indicators present: {indicator_match:.2f}")
             
@@ -86,28 +86,22 @@ class ModelRouter:
         }
     
     def _calculate_complexity_match(self, complexity: float, config: Dict) -> float:
-        """Calculate how well complexity matches model's optimal range"""
+        """Calculate complexity match with STRICT thresholds per assignment requirements"""
         if "complexity_threshold" in config:
-            # Models with minimum threshold (Claude, GPT-4o-mini)
             threshold = config["complexity_threshold"]
             if config["name"] == "claude-sonnet-4":
-                # Claude: optimal for >= 0.8
-                return 1.0 if complexity >= threshold else complexity / threshold
+                # Claude: ONLY for complexity >= 0.8, zero score otherwise
+                return 1.0 if complexity >= threshold else 0.0
             else:
-                # GPT-4o-mini: optimal for < 0.4
-                return 1.0 if complexity < threshold else (1.0 - complexity) / (1.0 - threshold)
+                # GPT-4o-mini: ONLY for complexity < 0.4, zero score otherwise  
+                return 1.0 if complexity < threshold else 0.0
         
         elif "complexity_range" in config:
-            # Models with range (Grok-2, GPT-4o)
+            # Models with range (Grok-2, GPT-4o): STRICT range enforcement
             min_c, max_c = config["complexity_range"]
-            if min_c <= complexity <= max_c:
-                return 1.0
-            elif complexity < min_c:
-                return complexity / min_c
-            else:
-                return (1.0 - complexity) / (1.0 - max_c)
+            return 1.0 if min_c <= complexity <= max_c else 0.0
         
-        return 0.5  # Default neutral score
+        return 0.0  # No partial credit for anything outside thresholds
     
     def _calculate_intent_match(self, intent: str, config: Dict) -> float:
         """Calculate intent alignment with model's optimal intents"""

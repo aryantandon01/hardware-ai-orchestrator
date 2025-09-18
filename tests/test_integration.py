@@ -79,7 +79,7 @@ class TestSystemIntegration:
     def test_automotive_compliance(self):
         """Test automotive compliance (should route to Claude Sonnet 4)"""
         response = client.post("/api/v1/analyze", json={
-            "query": "Design buck converter for automotive ECU, 12V to 5V at 3A, must meet AEC-Q100 qualification and ISO 26262 ASIL-B functional safety requirements",
+            "query": "Develop comprehensive automotive buck converter solution with integrated power stage design, advanced control loop compensation, thermal impedance modeling, electromagnetic compatibility analysis, component stress derating calculations, reliability prediction using MIL-HDBK-217F, AEC-Q100 qualification planning, ISO 26262 V-model development process, ASIL decomposition strategy, and complete design verification testing protocol",
             "user_expertise": "expert"
         })
         

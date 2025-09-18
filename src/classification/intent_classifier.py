@@ -2,7 +2,7 @@
 Hardware Query Intent Classification
 Recognizes 12 distinct hardware engineering intent categories
 """
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any
 import re
 from ..config.intent_categories import INTENT_CATEGORIES
 
@@ -49,6 +49,46 @@ class HardwareIntentClassifier:
             intent_scores[intent] = min(final_score, 1.0)
         
         return intent_scores
+    
+    def classify_multiple_intents(self, query: str) -> Dict[str, Any]:
+        """Enhanced intent classifier supporting multiple concurrent intents"""
+        intents = self.classify_intent(query)
+        
+        # Identify queries with multiple intents
+        active_intents = {k: v for k, v in intents.items() if v > 0.4}
+        
+        return {
+            "primary_intents": active_intents,
+            "intent_combination": self._detect_intent_patterns(active_intents)
+        }
+    
+    def _detect_intent_patterns(self, active_intents: Dict[str, float]) -> str:
+        """Detect common multi-intent patterns in hardware queries"""
+        # Component selection + Compliance checking
+        if ("component_selection" in active_intents and 
+            "compliance_checking" in active_intents):
+            return "component_selection_and_compliance"
+        
+        # Circuit analysis + Thermal analysis  
+        if ("circuit_analysis" in active_intents and 
+            "thermal_analysis" in active_intents):
+            return "circuit_analysis_and_thermal"
+        
+        # Component selection + Cost optimization
+        if ("component_selection" in active_intents and 
+            "cost_optimization" in active_intents):
+            return "component_selection_and_cost"
+        
+        # Design validation + Compliance checking
+        if ("design_validation" in active_intents and 
+            "compliance_checking" in active_intents):
+            return "design_validation_and_compliance"
+        
+        # Default: multiple intents without specific pattern
+        if len(active_intents) > 1:
+            return "multiple_intents"
+        
+        return "single_intent"
     
     def get_primary_intent(self, query: str) -> Tuple[str, float]:
         """Get the highest-confidence intent classification"""

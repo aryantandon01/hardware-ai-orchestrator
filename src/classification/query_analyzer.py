@@ -21,17 +21,36 @@ class HardwareQueryAnalyzer:
         self.model_router = ModelRouter()
         self.fallback_handler = FallbackHandler()
     
-    def analyze_query(self, query: str) -> Dict[str, Any]:
+    def analyze_query(self, query: str, enable_multi_intent: bool = False) -> Dict[str, Any]:
         """
-        Complete analysis of hardware engineering query
+        Complete analysis of hardware engineering query with optional multi-intent support
         Returns classification, complexity, and routing decision
         """
         try:
             logger.info(f"Analyzing query: {query[:100]}...")
             
-            # Step 1: Intent Classification
-            primary_intent, intent_confidence = self.intent_classifier.get_primary_intent(query)
-            all_intents = self.intent_classifier.classify_intent(query)
+            # Step 1: Intent Classification (Enhanced)
+            if enable_multi_intent:
+                # Use enhanced multi-intent classification
+                intent_analysis = self.intent_classifier.classify_multiple_intents(query)
+                active_intents = intent_analysis.get("primary_intents", {})
+                
+                # Extract primary intent from multi-intent analysis
+                if active_intents:
+                    primary_intent = max(active_intents, key=active_intents.get)
+                    intent_confidence = active_intents[primary_intent]
+                else:
+                    # Fallback to single intent if no active intents found
+                    primary_intent, intent_confidence = self.intent_classifier.get_primary_intent(query)
+                
+                # Use multi-intent analysis as all_intents
+                all_intents = intent_analysis
+                intent_combination = intent_analysis.get("intent_combination", "single_intent")
+            else:
+                # Use existing single-intent classification
+                primary_intent, intent_confidence = self.intent_classifier.get_primary_intent(query)
+                all_intents = self.intent_classifier.classify_intent(query)
+                intent_combination = "single_intent"
             
             # Step 2: Domain Detection  
             primary_domain, domain_confidence = self.domain_detector.get_primary_domain(query)
@@ -71,7 +90,9 @@ class HardwareQueryAnalyzer:
                 "routing": routing_decision,
                 "analysis_metadata": {
                     "timestamp": self._get_timestamp(),
-                    "version": "1.0.0"
+                    "version": "1.0.0",
+                    "multi_intent_enabled": enable_multi_intent,
+                    "intent_combination": intent_combination if enable_multi_intent else "single_intent"
                 }
             }
             
@@ -84,7 +105,7 @@ class HardwareQueryAnalyzer:
         except Exception as e:
             logger.error(f"Query analysis failed: {e}")
             return self._handle_analysis_failure(query, e)
-    
+
     def _handle_analysis_failure(self, query: str, error: Exception) -> Dict[str, Any]:
         """Handle analysis failures with graceful fallback"""
         fallback_routing = self.fallback_handler.handle_routing_failure(query, 0.5, error)

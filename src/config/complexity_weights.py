@@ -4,17 +4,19 @@ Complexity Scoring Algorithm Weights and Configuration
 
 COMPLEXITY_FACTORS = {
     "technical_keywords_density": {
-        "weight": 0.25,
+        "weight": 0.30,
         "description": "Identification and weighting of specialized terminology",
         "high_complexity_keywords": [
             "optimization", "analysis", "simulation", "modeling", "calculation", "algorithm",
             "mathematical", "statistical", "monte carlo", "worst-case", "corner analysis",
             "sensitivity", "tolerance", "derating", "thermal analysis", "EMI", "EMC",
-            "signal integrity", "impedance", "transmission line", "high-frequency", "RF"
+            "signal integrity", "impedance", "transmission line", "high-frequency", "RF",
+            "microcontroller", "cortex-m4", "ultra-low power", "power management",
+            "connectivity", "embedded", "optimization", "integrated"
         ]
     },
     "design_constraint_count": {
-        "weight": 0.20,
+        "weight": 0.15,
         "description": "Number of simultaneous requirements and limitations",
         "constraint_keywords": [
             "requirement", "constraint", "limit", "specification", "tolerance", "range",
@@ -22,7 +24,7 @@ COMPLEXITY_FACTORS = {
         ]
     },
     "domain_specificity": {
-        "weight": 0.20,
+        "weight": 0.25,
         "description": "Level of specialized knowledge required",
         "high_specificity_domains": ["automotive", "medical", "analog_rf", "power_electronics"]
     },
@@ -32,7 +34,7 @@ COMPLEXITY_FACTORS = {
         "calculation_keywords": [
             "calculate", "formula", "equation", "derive", "compute", "mathematical",
             "integration", "differentiation", "transfer function", "frequency response",
-            "gain", "phase", "stability", "margin", "bandwidth", "efficiency"
+            "gain", "phase", "stability", "margin", "bandwidth", "efficiency", "evaluate", "analysis"
         ]
     },
     "standards_involvement": {
