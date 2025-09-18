@@ -9,11 +9,22 @@ import time
 import logging
 import uvicorn
 import os
+from typing import Optional
 
 
 from .api.endpoints import router
 from .config.settings import settings
 
+
+# Add to your existing API endpoints (src/api/endpoints.py or main.py)
+
+from src.metrics.performance_monitor import performance_monitor
+from src.metrics.accuracy_tracker import accuracy_tracker
+from src.metrics.user_feedback import feedback_system, UserFeedback
+from src.metrics.model_routing_validator import routing_validator, RoutingDecision
+# from src.metrics.dashboard.metrics_api import metrics_router
+from datetime import datetime
+import uuid
 
 # Import schematic router with graceful fallback
 try:
@@ -323,3 +334,236 @@ if __name__ == "__main__":
         access_log=True,
         reload_dirs=["src"] if settings.debug else None
     )
+
+@schematic_router.post("/analyze")
+async def analyze_schematic(file: UploadFile = File(...)):
+    """Enhanced schematic analysis with comprehensive metrics tracking"""
+    import time
+    import tempfile
+    import asyncio
+    from pathlib import Path
+    from fastapi import HTTPException
+    from fastapi.encoders import jsonable_encoder
+    
+    # Import your metrics modules (add these at the top of your file)
+    from src.metrics.performance_monitor import performance_monitor
+    from src.metrics.accuracy_tracker import accuracy_tracker
+    from src.vision.schematic_processor.integration_handler import EnhancedSchematicProcessor
+    
+    # Generate unique query ID
+    query_id = f"query_{int(time.time() * 1000)}"
+    temp_file_path = None
+    
+    # Start performance monitoring
+    performance_monitor.start_measurement(query_id, "schematic_analysis")
+    
+    try:
+        # File validation with metrics tracking
+        allowed_extensions = ('.png', '.jpg', '.jpeg', '.bmp', '.tiff')
+        if not file.filename.lower().endswith(allowed_extensions):
+            performance_monitor.complete_measurement(
+                query_id, 
+                success=False, 
+                error_type="InvalidFileType"
+            )
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported file type. Supported formats: {', '.join(allowed_extensions)}"
+            )
+        
+        # Save uploaded file temporarily
+        file_content = await file.read()
+        with tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename).suffix) as tmp_file:
+            tmp_file.write(file_content)
+            temp_file_path = tmp_file.name
+        
+        # Processing with detailed checkpoints
+        processor = EnhancedSchematicProcessor()
+        
+        # Checkpoint: Starting symbol detection
+        performance_monitor.checkpoint(query_id, "symbol_detection_start")
+        
+        # Process schematic - this calls your existing process_schematic method
+        result = await processor.process_schematic(temp_file_path)
+        
+        # Checkpoint: Processing complete
+        performance_monitor.checkpoint(query_id, "processing_complete")
+        
+        # Calculate complexity score from results (you can enhance this logic)
+        complexity_score = calculate_complexity_score(result)
+        
+        # Complete performance measurement
+        perf_metric = performance_monitor.complete_measurement(
+            query_id,
+            success=True,
+            complexity_score=complexity_score
+        )
+        
+        # Add comprehensive metrics metadata to response
+        result["metrics"] = {
+            "query_id": query_id,
+            "processing_time_ms": round(perf_metric.total_time_ms, 2),
+            "performance_grade": calculate_performance_grade(perf_metric.total_time_ms),
+            "complexity_score": complexity_score,
+            "timestamp": perf_metric.timestamp.isoformat(),
+            "checkpoints": {
+                "symbol_detection_ms": perf_metric.symbol_detection_ms,
+                "ocr_extraction_ms": perf_metric.ocr_extraction_ms,
+                "topology_analysis_ms": perf_metric.topology_analysis_ms,
+                "recommendations_ms": perf_metric.recommendations_ms
+            }
+        }
+        
+        # Async accuracy validation (doesn't block response)
+        asyncio.create_task(
+            validate_component_accuracy_async(
+                query_id,
+                result.get("detected_components", []),
+                complexity_score
+            )
+        )
+        
+        # Ensure JSON serialization safety
+        safe_result = jsonable_encoder(result)
+        
+        return safe_result
+    
+    except Exception as e:
+        # Record failed measurement with detailed error info
+        performance_monitor.complete_measurement(
+            query_id,
+            success=False,
+            error_type=type(e).__name__
+        )
+        
+        logger.error(f"❌ Schematic analysis failed for query {query_id}: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": f"Processing failed: {str(e)}",
+                "query_id": query_id,
+                "timestamp": time.time()
+            }
+        )
+    
+    finally:
+        # Robust cleanup
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.unlink(temp_file_path)
+            except OSError as cleanup_error:
+                logger.warning(f"Failed to cleanup temp file {temp_file_path}: {cleanup_error}")
+
+
+def calculate_complexity_score(result: dict) -> float:
+    """Calculate query complexity score based on analysis results"""
+    try:
+        component_count = len(result.get("detected_components", []))
+        topology_connections = len(result.get("topology_analysis", {}).get("connections", []))
+        has_spice = result.get("spice_netlist", {}).get("generation_successful", False)
+        
+        # Simple complexity scoring (you can enhance this)
+        base_score = min(component_count / 20.0, 1.0)  # Normalize by expected max components
+        topology_bonus = min(topology_connections / 10.0, 0.3)  # Up to 30% bonus for topology
+        spice_bonus = 0.2 if has_spice else 0  # 20% bonus if SPICE generated
+        
+        return min(base_score + topology_bonus + spice_bonus, 1.0)
+    except Exception:
+        return 0.5  # Default complexity if calculation fails
+
+
+def calculate_performance_grade(processing_time_ms: float) -> str:
+    """Calculate performance grade based on processing time"""
+    if processing_time_ms < 2000:
+        return "A+"
+    elif processing_time_ms < 3000:
+        return "A"
+    elif processing_time_ms < 5000:
+        return "B"
+    elif processing_time_ms < 8000:
+        return "C"
+    else:
+        return "D"
+
+
+async def validate_component_accuracy_async(query_id: str, components: list, complexity: float):
+    """Async validation of component accuracy (runs in background)"""
+    try:
+        if not components:
+            return
+        
+        # Sample validation for first few components
+        for i, component in enumerate(components[:5]):  # Limit to first 5 for performance
+            await accuracy_tracker.validate_component_accuracy(
+                query_id=f"{query_id}_comp_{i}",
+                component_type=component.get("component_type", "unknown"),
+                predicted_specs={
+                    "designation": component.get("designation"),
+                    "value": component.get("value"),
+                    "confidence": component.get("confidence", 0.0)
+                },
+                validation_method="auto"
+            )
+    except Exception as e:
+        logger.warning(f"Background accuracy validation failed for {query_id}: {e}")
+
+
+@schematic_router.post("/feedback")
+async def submit_user_feedback(
+    query_id: str,
+    satisfaction_rating: int,
+    relevance_score: int,
+    accuracy_perceived: int,
+    speed_satisfaction: int,
+    user_id: str = "anonymous",
+    comments: Optional[str] = None,
+    feature_used: Optional[str] = None
+):
+    """Submit user feedback for analysis quality"""
+    
+    feedback = UserFeedback(
+        timestamp=datetime.now(),
+        query_id=query_id,
+        user_id=user_id,
+        satisfaction_rating=satisfaction_rating,
+        relevance_score=relevance_score,
+        accuracy_perceived=accuracy_perceived,
+        speed_satisfaction=speed_satisfaction,
+        comments=comments,
+        feature_used=feature_used
+    )
+    
+    feedback_id = feedback_system.submit_feedback(feedback)
+    
+    return {
+        "status": "success",
+        "feedback_id": feedback_id,
+        "message": "Thank you for your feedback!"
+    }
+
+@schematic_router.get("/metrics/dashboard")
+async def get_metrics_dashboard():
+    """Get comprehensive metrics dashboard"""
+    
+    # Gather all metrics
+    performance_summary = performance_monitor.get_performance_summary(24)
+    accuracy_summary = accuracy_tracker.get_accuracy_summary(7)
+    satisfaction_summary = feedback_system.get_satisfaction_summary(30)
+    routing_summary = routing_validator.validate_routing_accuracy(7)
+    
+    return {
+        "dashboard_generated": datetime.now().isoformat(),
+        "performance": performance_summary,
+        "accuracy": accuracy_summary,
+        "user_satisfaction": satisfaction_summary,
+        "model_routing": routing_summary,
+        "compliance_status": {
+            "performance_target_met": performance_summary.get("target_met", False),
+            "accuracy_target_met": accuracy_summary.get("target_met", False),
+            "satisfaction_target_met": satisfaction_summary.get("target_met", False),
+            "routing_target_met": routing_summary.get("target_met", False)
+        }
+    }
