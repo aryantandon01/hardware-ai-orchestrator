@@ -1,4 +1,6 @@
 # src/processing/entity_extractor.py
+from typing import Any, Dict
+
 class HardwareEntityExtractor:
     """Extract hardware-specific entities from natural language queries"""
     
