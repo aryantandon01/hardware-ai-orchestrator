@@ -7,6 +7,11 @@ from fastapi import APIRouter, HTTPException
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 import json
+from .performance_monitor import performance_monitor
+from .accuracy_tracker import accuracy_tracker
+from .user_feedback import feedback_system
+from .model_routing_validator import routing_validator
+
 
 metrics_router = APIRouter(prefix="/api/v1/metrics", tags=["metrics"])
 
