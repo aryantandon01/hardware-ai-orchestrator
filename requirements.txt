@@ -16,3 +16,18 @@ pytest-asyncio==0.21.1
 coverage==7.3.2
 python-multipart==0.0.20
 huggingface_hub==0.35.0
+
+# Advanced Features
+torch>=2.0.0,<3.0.0
+torchvision>=0.15.0,<1.0.0
+torchaudio>=2.0.0,<3.0.0
+ultralytics>=8.0.0,<9.0.0
+opencv-python>=4.8.0,<5.0.0
+Pillow>=9.5.0,<11.0.0
+scikit-image>=0.21.0,<1.0.0
+easyocr>=1.7.0,<2.0.0
+networkx>=3.1,<4.0
+matplotlib>=3.7.0,<4.0.0
+numpy>=1.24.0,<2.0.0
+pandas>=2.0.0,<3.0.0
+scipy>=1.10.0,<2.0.0
