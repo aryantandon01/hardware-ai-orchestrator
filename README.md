@@ -1,4 +1,4 @@
-# Hardware AI Orchestrator\
+# Hardware AI Orchestrator
 
 ***
 
