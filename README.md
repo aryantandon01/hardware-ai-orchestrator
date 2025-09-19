@@ -22,14 +22,6 @@ uvicorn src.main:app --reload
 open http://localhost:8000/docs
 ```
 
-**Test the system immediately:**
-
-```bash
-# PowerShell example - Simple component lookup
-$body = @{"query" = "What are LM317 specifications?"; "user_expertise" = "intermediate"} | ConvertTo-Json
-Invoke-RestMethod -Uri "http://localhost:8000/api/v1/analyze" -Method Post -Body $body -ContentType "application/json"
-```
-
 ***
 
 ## 🎯 Core Capabilities
