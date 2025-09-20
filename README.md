@@ -98,7 +98,7 @@ For demonstration, I implemented a superset of APIs (~20 endpoints). However, fo
 - /api/v1/demo/... → three demo scenarios (buck converter, MCU selection, op-amp).
 - /api/v1/health → health check.
 
-The rest are extensions I added to showcase how the system could scale (advanced analysis, collaboration, schematic processing).”
+The rest are extensions I added to showcase how the system could scale (advanced analysis, collaboration, schematic processing).
 
 ***
 
