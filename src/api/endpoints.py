@@ -281,171 +281,171 @@ async def get_categories() -> Dict[str, Any]:
             "error": str(e)
         }
 
-# Demo scenario endpoints
-@router.post("/demo/automotive-buck-converter")
-async def demo_automotive_converter(query: str = "Design automotive buck converter, 12V to 5V, 3A, AEC-Q100"):
-    """Demo: Automotive buck converter design scenario"""
-    try:
-        from ..demos.automotive_buck_converter import AutomotiveBuckConverterDemo
-        demo = AutomotiveBuckConverterDemo()
-        return await demo.process_design_query(query)
-    except Exception as e:
-        logger.error(f"Automotive demo failed: {e}")
-        return {
-            "error": "Demo temporarily unavailable",
-            "message": "Automotive buck converter demo is being updated",
-            "query": query
-        }
+# # Demo scenario endpoints
+# @router.post("/demo/automotive-buck-converter")
+# async def demo_automotive_converter(query: str = "Design automotive buck converter, 12V to 5V, 3A, AEC-Q100"):
+#     """Demo: Automotive buck converter design scenario"""
+#     try:
+#         from ..demos.automotive_buck_converter import AutomotiveBuckConverterDemo
+#         demo = AutomotiveBuckConverterDemo()
+#         return await demo.process_design_query(query)
+#     except Exception as e:
+#         logger.error(f"Automotive demo failed: {e}")
+#         return {
+#             "error": "Demo temporarily unavailable",
+#             "message": "Automotive buck converter demo is being updated",
+#             "query": query
+#         }
 
-@router.post("/demo/iot-mcu-selection")
-async def demo_iot_mcu_selection(query: str = "Compare ARM Cortex-M4 MCUs for IoT with WiFi and low power"):
-    """Demo: IoT microcontroller selection scenario"""
-    try:
-        from ..demos.iot_mcu_selection import IoTMCUSelectionDemo
-        demo = IoTMCUSelectionDemo()
-        return await demo.process_selection_query(query)
-    except Exception as e:
-        logger.error(f"IoT MCU demo failed: {e}")
-        return {
-            "error": "Demo temporarily unavailable",
-            "message": "IoT MCU selection demo is being updated",
-            "query": query
-        }
+# @router.post("/demo/iot-mcu-selection")
+# async def demo_iot_mcu_selection(query: str = "Compare ARM Cortex-M4 MCUs for IoT with WiFi and low power"):
+#     """Demo: IoT microcontroller selection scenario"""
+#     try:
+#         from ..demos.iot_mcu_selection import IoTMCUSelectionDemo
+#         demo = IoTMCUSelectionDemo()
+#         return await demo.process_selection_query(query)
+#     except Exception as e:
+#         logger.error(f"IoT MCU demo failed: {e}")
+#         return {
+#             "error": "Demo temporarily unavailable",
+#             "message": "IoT MCU selection demo is being updated",
+#             "query": query
+#         }
 
-@router.post("/demo/opamp-analysis")
-async def demo_opamp_analysis(query: str = "Explain gain-bandwidth product in op-amp design"):
-    """Demo: Operational amplifier educational analysis"""
-    try:
-        from ..demos.opamp_educational import OpAmpEducationalDemo
-        demo = OpAmpEducationalDemo()
-        return await demo.process_educational_query(query)
-    except Exception as e:
-        logger.error(f"Op-amp demo failed: {e}")
-        return {
-            "error": "Demo temporarily unavailable",
-            "message": "Op-amp analysis demo is being updated",
-            "query": query
-        }
+# @router.post("/demo/opamp-analysis")
+# async def demo_opamp_analysis(query: str = "Explain gain-bandwidth product in op-amp design"):
+#     """Demo: Operational amplifier educational analysis"""
+#     try:
+#         from ..demos.opamp_educational import OpAmpEducationalDemo
+#         demo = OpAmpEducationalDemo()
+#         return await demo.process_educational_query(query)
+#     except Exception as e:
+#         logger.error(f"Op-amp demo failed: {e}")
+#         return {
+#             "error": "Demo temporarily unavailable",
+#             "message": "Op-amp analysis demo is being updated",
+#             "query": query
+#         }
 
-@router.post("/demo/component-lookup")
-async def demo_component_lookup(part_number: str = "LM317"):
-    """Demo: Component specification lookup"""
-    try:
-        from ..demos.component_lookup import ComponentLookupDemo, LookupRequest
-        demo = ComponentLookupDemo()
-        request = LookupRequest(part_number=part_number)
-        return await demo.process_lookup_query(f"What are {part_number} specifications?", request)
-    except Exception as e:
-        logger.error(f"Component lookup demo failed: {e}")
-        return {
-            "error": "Demo temporarily unavailable",
-            "message": "Component lookup demo is being updated",
-            "part_number": part_number
-        }
+# @router.post("/demo/component-lookup")
+# async def demo_component_lookup(part_number: str = "LM317"):
+#     """Demo: Component specification lookup"""
+#     try:
+#         from ..demos.component_lookup import ComponentLookupDemo, LookupRequest
+#         demo = ComponentLookupDemo()
+#         request = LookupRequest(part_number=part_number)
+#         return await demo.process_lookup_query(f"What are {part_number} specifications?", request)
+#     except Exception as e:
+#         logger.error(f"Component lookup demo failed: {e}")
+#         return {
+#             "error": "Demo temporarily unavailable",
+#             "message": "Component lookup demo is being updated",
+#             "part_number": part_number
+#         }
 
-# Phase 3 Advanced Features Endpoints
-@router.post("/advanced/analyze-schematic")
-async def analyze_schematic(file: UploadFile = File(...)):
-    """Analyze uploaded schematic diagram"""
-    try:
-        from ..advanced.multimodal.schematic_processor import SchematicProcessor
+# # Phase 3 Advanced Features Endpoints
+# @router.post("/advanced/analyze-schematic")
+# async def analyze_schematic(file: UploadFile = File(...)):
+#     """Analyze uploaded schematic diagram"""
+#     try:
+#         from ..advanced.multimodal.schematic_processor import SchematicProcessor
         
-        processor = SchematicProcessor()
-        image_data = await file.read()
+#         processor = SchematicProcessor()
+#         image_data = await file.read()
         
-        result = await processor.analyze_schematic(image_data, analysis_type="complete")
+#         result = await processor.analyze_schematic(image_data, analysis_type="complete")
         
-        return {
-            "analysis_results": {
-                "detected_components": result.detected_components,
-                "circuit_topology": result.circuit_topology,
-                "design_rules_check": result.design_rules_check,
-                "auto_generated_bom": result.auto_generated_bom,
-                "confidence_score": result.confidence_score
-            }
-        }
-    except Exception as e:
-        logger.error(f"Schematic analysis failed: {e}")
-        return {
-            "error": "Schematic analysis temporarily unavailable",
-            "message": "Multi-modal processing is being updated",
-            "filename": file.filename
-        }
+#         return {
+#             "analysis_results": {
+#                 "detected_components": result.detected_components,
+#                 "circuit_topology": result.circuit_topology,
+#                 "design_rules_check": result.design_rules_check,
+#                 "auto_generated_bom": result.auto_generated_bom,
+#                 "confidence_score": result.confidence_score
+#             }
+#         }
+#     except Exception as e:
+#         logger.error(f"Schematic analysis failed: {e}")
+#         return {
+#             "error": "Schematic analysis temporarily unavailable",
+#             "message": "Multi-modal processing is being updated",
+#             "filename": file.filename
+#         }
 
-@router.post("/advanced/analyze-simulation")
-async def analyze_simulation(simulation_data: Dict[str, Any]):
-    """Analyze SPICE simulation results with AI optimization"""
-    try:
-        from ..advanced.simulation.spice_analyzer import SPICEAnalyzer
+# @router.post("/advanced/analyze-simulation")
+# async def analyze_simulation(simulation_data: Dict[str, Any]):
+#     """Analyze SPICE simulation results with AI optimization"""
+#     try:
+#         from ..advanced.simulation.spice_analyzer import SPICEAnalyzer
         
-        analyzer = SPICEAnalyzer()
-        result = await analyzer.analyze_simulation_results(simulation_data)
+#         analyzer = SPICEAnalyzer()
+#         result = await analyzer.analyze_simulation_results(simulation_data)
         
-        return result
-    except Exception as e:
-        logger.error(f"Simulation analysis failed: {e}")
-        return {
-            "error": "Simulation analysis temporarily unavailable",
-            "message": "SPICE analysis is being updated"
-        }
+#         return result
+#     except Exception as e:
+#         logger.error(f"Simulation analysis failed: {e}")
+#         return {
+#             "error": "Simulation analysis temporarily unavailable",
+#             "message": "SPICE analysis is being updated"
+#         }
 
-@router.post("/advanced/supply-chain-forecast")
-async def supply_chain_forecast(component_id: str, horizon_months: int = 12):
-    """Generate supply chain forecast for component"""
-    try:
-        from ..advanced.intelligence.supply_chain_predictor import SupplyChainPredictor
+# @router.post("/advanced/supply-chain-forecast")
+# async def supply_chain_forecast(component_id: str, horizon_months: int = 12):
+#     """Generate supply chain forecast for component"""
+#     try:
+#         from ..advanced.intelligence.supply_chain_predictor import SupplyChainPredictor
         
-        predictor = SupplyChainPredictor()
-        forecast = await predictor.forecast_component_supply(component_id, horizon_months)
+#         predictor = SupplyChainPredictor()
+#         forecast = await predictor.forecast_component_supply(component_id, horizon_months)
         
-        return {
-            "component_id": forecast.component_id,
-            "current_status": forecast.current_status,
-            "availability_forecast": forecast.availability_forecast,
-            "price_forecast": forecast.price_forecast,
-            "risk_assessment": forecast.risk_assessment,
-            "alternatives": forecast.alternative_recommendations
-        }
-    except Exception as e:
-        logger.error(f"Supply chain forecast failed: {e}")
-        return {
-            "error": "Supply chain forecasting temporarily unavailable",
-            "message": "Predictive analytics is being updated",
-            "component_id": component_id
-        }
+#         return {
+#             "component_id": forecast.component_id,
+#             "current_status": forecast.current_status,
+#             "availability_forecast": forecast.availability_forecast,
+#             "price_forecast": forecast.price_forecast,
+#             "risk_assessment": forecast.risk_assessment,
+#             "alternatives": forecast.alternative_recommendations
+#         }
+#     except Exception as e:
+#         logger.error(f"Supply chain forecast failed: {e}")
+#         return {
+#             "error": "Supply chain forecasting temporarily unavailable",
+#             "message": "Predictive analytics is being updated",
+#             "component_id": component_id
+#         }
 
-@router.post("/collaboration/create-design-pattern")
-async def create_design_pattern(design_data: Dict[str, Any], metadata: Dict[str, Any]):
-    """Create reusable design pattern from successful project"""
-    try:
-        from ..advanced.collaboration.knowledge_manager import CollaborativeKnowledgeManager
+# @router.post("/collaboration/create-design-pattern")
+# async def create_design_pattern(design_data: Dict[str, Any], metadata: Dict[str, Any]):
+#     """Create reusable design pattern from successful project"""
+#     try:
+#         from ..advanced.collaboration.knowledge_manager import CollaborativeKnowledgeManager
         
-        manager = CollaborativeKnowledgeManager()
-        pattern_id = await manager.create_design_pattern(design_data, metadata)
+#         manager = CollaborativeKnowledgeManager()
+#         pattern_id = await manager.create_design_pattern(design_data, metadata)
         
-        return {"pattern_id": pattern_id, "status": "created"}
-    except Exception as e:
-        logger.error(f"Design pattern creation failed: {e}")
-        return {
-            "error": "Design pattern creation temporarily unavailable",
-            "message": "Collaboration features are being updated"
-        }
+#         return {"pattern_id": pattern_id, "status": "created"}
+#     except Exception as e:
+#         logger.error(f"Design pattern creation failed: {e}")
+#         return {
+#             "error": "Design pattern creation temporarily unavailable",
+#             "message": "Collaboration features are being updated"
+#         }
 
-@router.get("/collaboration/design-patterns")
-async def search_design_patterns(query: str = "", category: str = None):
-    """Search organizational design patterns"""
-    try:
-        from ..advanced.collaboration.knowledge_manager import CollaborativeKnowledgeManager
+# @router.get("/collaboration/design-patterns")
+# async def search_design_patterns(query: str = "", category: str = None):
+#     """Search organizational design patterns"""
+#     try:
+#         from ..advanced.collaboration.knowledge_manager import CollaborativeKnowledgeManager
         
-        manager = CollaborativeKnowledgeManager()
-        filters = {"category": category} if category else None
-        patterns = await manager.search_design_patterns(query, filters)
+#         manager = CollaborativeKnowledgeManager()
+#         filters = {"category": category} if category else None
+#         patterns = await manager.search_design_patterns(query, filters)
         
-        return {"patterns": patterns}
-    except Exception as e:
-        logger.error(f"Design pattern search failed: {e}")
-        return {
-            "error": "Design pattern search temporarily unavailable",
-            "message": "Collaboration features are being updated",
-            "query": query
-        }
+#         return {"patterns": patterns}
+#     except Exception as e:
+#         logger.error(f"Design pattern search failed: {e}")
+#         return {
+#             "error": "Design pattern search temporarily unavailable",
+#             "message": "Collaboration features are being updated",
+#             "query": query
+#         }
