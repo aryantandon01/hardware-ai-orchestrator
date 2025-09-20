@@ -74,7 +74,7 @@ app = FastAPI(
     redoc_url="/redoc",
     contact={
         "name": "Hardware AI Orchestrator",
-        "url": "https://github.com/your-repo/hardware-ai-orchestrator"
+        "url": "https://github.com/aryantandon01/hardware-ai-orchestrator"
     }
 )
 
@@ -190,7 +190,7 @@ async def system_status():
     """Comprehensive system status endpoint"""
     try:
         # Test core components
-        from .analysis.query_analyzer import HardwareQueryAnalyzer
+        from .classification.query_analyzer import HardwareQueryAnalyzer
         from .routing.model_router import ModelRouter
         
         core_status = "healthy"
