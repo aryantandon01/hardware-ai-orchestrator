@@ -92,6 +92,14 @@ Context Enhancement → AI Model Invocation → Response Integration → Formatt
 | **GPT-4o** | 0.4-0.7 | General hardware knowledge | Educational content, troubleshooting |
 | **GPT-4o-mini** | <0.4 | Simple spec lookups | Quick parameter retrieval, basic info |
 
+For demonstration, I implemented a superset of APIs (~20 endpoints). However, for the assignment’s core objectives, the following 4 endpoints are key:
+- /api/v1/analyze → main pipeline (classification + retrieval + routing).
+- /api/v1/analyze-with-knowledge → main RAG-enhanced analysis.
+- /api/v1/demo/... → demo scenarios (buck converter, MCU selection, op-amp, IoT Microcontroller).
+- /api/v1/health → health check.
+
+The rest are extensions I added to showcase how the system could scale (advanced analysis, collaboration, schematic processing).
+
 ***
 
 ## 🎪 Professional Demonstrations
