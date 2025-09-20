@@ -4,7 +4,7 @@ Complexity Scoring Algorithm Weights and Configuration
 
 COMPLEXITY_FACTORS = {
     "technical_keywords_density": {
-        "weight": 0.30,
+        "weight": 0.275,
         "description": "Identification and weighting of specialized terminology",
         "high_complexity_keywords": [
             "optimization", "analysis", "simulation", "modeling", "calculation", "algorithm",
@@ -13,6 +13,14 @@ COMPLEXITY_FACTORS = {
             "signal integrity", "impedance", "transmission line", "high-frequency", "RF",
             "microcontroller", "cortex-m4", "ultra-low power", "power management",
             "connectivity", "embedded", "optimization", "integrated"
+            "FPGA", "Xilinx", "Altera", "Intel", "VHDL", "Verilog", "SystemVerilog",
+            "synthesis", "place and route", "timing closure", "resource utilization",
+            "processor core", "32-bit", "64-bit", "RISC", "pipeline", "cache",
+            "three-phase", "motor controller", "PLC interface", "industrial communication",
+            "Modbus", "Profibus", "EtherCAT", "DeviceNet", "industrial ethernet",
+            "fault-tolerant", "dual-redundant", "CISPR 25", "powertrain", "ECU",
+            "IEC 60601", "patient isolation", "4kV test voltage", "medical equipment",
+            "biocompatibility", "sterilization", "defibrillation", "patient applied part"
         ]
     },
     "design_constraint_count": {
@@ -24,7 +32,7 @@ COMPLEXITY_FACTORS = {
         ]
     },
     "domain_specificity": {
-        "weight": 0.25,
+        "weight": 0.225,
         "description": "Level of specialized knowledge required",
         "high_specificity_domains": ["automotive", "medical", "analog_rf", "power_electronics"]
     },

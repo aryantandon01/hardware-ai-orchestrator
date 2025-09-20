@@ -21,7 +21,7 @@ INTENT_CATEGORIES = {
             "bandwidth", "stability", "feedback", "compensation", "noise", "distortion"
         ],
         "complexity_indicators": ["mathematical", "calculation", "simulation", "optimization", "analysis"],
-        "base_complexity": 0.6
+        "base_complexity": 0.45
     },
     "thermal_analysis": {
         "description": "Heat sink calculations, power dissipation modeling, thermal resistance analysis",
@@ -31,7 +31,7 @@ INTENT_CATEGORIES = {
             "thermal pad", "thermal interface", "TIM", "airflow", "convection", "conduction"
         ],
         "complexity_indicators": ["calculation", "modeling", "simulation", "thermal analysis"],
-        "base_complexity": 0.7
+        "base_complexity": 0.55
     },
     "signal_integrity": {
         "description": "Impedance matching, crosstalk mitigation, EMI suppression techniques",
@@ -41,7 +41,7 @@ INTENT_CATEGORIES = {
             "differential", "single-ended", "noise", "interference", "shielding", "filtering"
         ],
         "complexity_indicators": ["high-frequency", "RF", "transmission line", "electromagnetic"],
-        "base_complexity": 0.8
+        "base_complexity": 0.45
     },
     "compliance_checking": {
         "description": "AEC-Q100 verification, EMC standards adherence, safety regulation compliance",
@@ -51,7 +51,7 @@ INTENT_CATEGORIES = {
             "ASIL", "SIL", "risk assessment", "hazard analysis", "verification", "validation"
         ],
         "complexity_indicators": ["safety-critical", "certification", "standards", "compliance"],
-        "base_complexity": 0.9
+        "base_complexity": 0.65
     },
     "design_validation": {
         "description": "Design review protocols, margin analysis, worst-case scenario evaluation",
@@ -61,7 +61,7 @@ INTENT_CATEGORIES = {
             "failure rate", "derating", "stress analysis", "corner analysis", "process variation"
         ],
         "complexity_indicators": ["statistical", "analysis", "modeling", "validation"],
-        "base_complexity": 0.8
+        "base_complexity": 0.55
     },
     "cost_optimization": {
         "description": "BOM cost reduction strategies, alternative component sourcing, volume pricing analysis",
@@ -81,7 +81,7 @@ INTENT_CATEGORIES = {
             "supply chain", "risk", "continuity", "legacy", "maintenance"
         ],
         "complexity_indicators": ["planning", "strategy", "long-term"],
-        "base_complexity": 0.5
+        "base_complexity": 0.4
     },
     "troubleshooting": {
         "description": "Failure mode analysis, measurement interpretation, debug methodology",
@@ -91,7 +91,7 @@ INTENT_CATEGORIES = {
             "multimeter", "spectrum analyzer", "logic analyzer", "not working", "broken"
         ],
         "complexity_indicators": ["analysis", "diagnosis", "systematic"],
-        "base_complexity": 0.6
+        "base_complexity": 0.45
     },
     "educational_content": {
         "description": "Circuit principle explanations, component fundamentals, design methodology guidance",

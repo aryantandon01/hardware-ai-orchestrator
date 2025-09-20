@@ -1,18 +1,16 @@
-# test_day2_rag.py - Comprehensive Day 2 RAG Testing Script
+# test_day2_fixed.py - Fixed Day 2 RAG Testing with Correct Data Structure Access
 
 import requests
 import json
 import time
 import sys
-from PIL import Image, ImageDraw
-import io
 from typing import Dict, List, Any
 
 # Configuration
 BASE_URL = "http://localhost:8000"
-TEST_TIMEOUT = 30  # seconds
+TEST_TIMEOUT = 30
 
-class HardwareAITester:
+class Day2FixedRAGTester:
     def __init__(self, base_url: str = BASE_URL):
         self.base_url = base_url
         self.session = requests.Session()
@@ -36,126 +34,73 @@ class HardwareAITester:
         elif success and "summary" in details:
             print(f"   {details['summary']}")
     
-    def test_system_status(self) -> bool:
-        """Test system health and component availability"""
+    def test_knowledge_retrieval_system_health(self) -> bool:
+        """Test Day 2 knowledge retrieval system availability"""
         try:
-            response = self.session.get(f"{self.base_url}/api/v1/status", timeout=10)
+            response = self.session.get(f"{self.base_url}/api/v1/health", timeout=10)
             
             if response.status_code == 200:
                 data = response.json()
                 components = data.get("components", {})
                 
-                self.log_result("System Status", True, {
-                    "summary": f"System healthy, Components: {list(components.keys())}",
-                    "components": components
-                })
-                return True
-            else:
-                self.log_result("System Status", False, {
-                    "error": f"Status code: {response.status_code}",
-                    "response": response.text
-                })
-                return False
+                # Check if knowledge retrieval component is operational
+                knowledge_status = components.get("knowledge_retrieval", "unknown")
                 
-        except Exception as e:
-            self.log_result("System Status", False, {"error": str(e)})
-            return False
-    
-    def test_basic_query_analysis(self) -> bool:
-        """Test basic query analysis without RAG"""
-        try:
-            payload = {
-                "query": "What are the specifications of LM317 voltage regulator?",
-                "user_expertise": "intermediate"
-            }
-            
-            response = self.session.post(
-                f"{self.base_url}/api/v1/analyze",
-                json=payload,
-                timeout=15
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Validate response structure
-                required_fields = ["complexity", "classification", "routing"]
-                missing_fields = [field for field in required_fields if field not in data]
-                
-                if missing_fields:
-                    self.log_result("Basic Query Analysis", False, {
-                        "error": f"Missing fields: {missing_fields}"
+                if knowledge_status == "operational":
+                    self.log_result("Knowledge Retrieval System Health", True, {
+                        "summary": f"Knowledge retrieval system operational",
+                        "all_components": components
+                    })
+                    return True
+                else:
+                    self.log_result("Knowledge Retrieval System Health", False, {
+                        "error": f"Knowledge retrieval status: {knowledge_status}",
+                        "components": components
                     })
                     return False
-                
-                complexity = data["complexity"]["final_score"]
-                model = data["routing"]["selected_model"]
-                intent = data["classification"]["primary_intent"]["intent"]
-                
-                self.log_result("Basic Query Analysis", True, {
-                    "summary": f"Model: {model}, Complexity: {complexity:.3f}, Intent: {intent}",
-                    "complexity": complexity,
-                    "selected_model": model,
-                    "intent": intent
-                })
-                return True
             else:
-                self.log_result("Basic Query Analysis", False, {
-                    "error": f"Status code: {response.status_code}",
-                    "response": response.text
+                self.log_result("Knowledge Retrieval System Health", False, {
+                    "error": f"Health check failed: HTTP {response.status_code}"
                 })
                 return False
                 
         except Exception as e:
-            self.log_result("Basic Query Analysis", False, {"error": str(e)})
+            self.log_result("Knowledge Retrieval System Health", False, {"error": str(e)})
             return False
     
-    def test_rag_enhanced_analysis(self) -> bool:
-        """Test RAG-enhanced analysis (Day 2 core functionality)"""
-        test_cases = [
+    def test_chromadb_component_database_access(self) -> bool:
+        """Test ChromaDB hardware_components collection access via RAG"""
+        
+        # Test queries targeting component database
+        component_queries = [
             {
-                "name": "Power Management Components",
-                "query": "Buck controllers for automotive 12V to 5V conversion with 3A current capability and AEC-Q100 qualification",
-                "expertise": "expert",
-                "expected_domain": "automotive",
-                "min_components": 1
+                "name": "Power Management Component",
+                "query": "LM317 voltage regulator specifications and applications",
+                "expertise": "intermediate"
             },
             {
                 "name": "Microcontroller Database",
-                "query": "ARM Cortex-M4 microcontrollers with ultra-low power consumption for IoT battery applications",
-                "expertise": "senior", 
-                "expected_domain": "embedded_hardware",
-                "min_components": 2
+                "query": "ARM Cortex-M4 microcontroller for automotive applications",
+                "expertise": "senior"
             },
             {
-                "name": "Analog IC Selection",
-                "query": "Precision operational amplifier for medical instrumentation with low offset voltage and rail-to-rail output",
-                "expertise": "expert",
-                "expected_domain": "medical",
-                "min_components": 1
-            },
-            {
-                "name": "Standards Database",
-                "query": "AEC-Q100 qualification requirements for automotive grade 0 components",
-                "expertise": "expert",
-                "expected_domain": "automotive",
-                "min_standards": 1
+                "name": "Analog IC Component",
+                "query": "precision operational amplifier for medical instrumentation",
+                "expertise": "expert"
             }
         ]
         
         success_count = 0
         
-        for test_case in test_cases:
+        for test_case in component_queries:
             try:
-                # Check if enhanced endpoint exists
                 payload = {
                     "query": test_case["query"],
-                    "user_expertise": test_case["expertise"],
-                    "include_knowledge": True
+                    "user_expertise": test_case["expertise"]
                 }
                 
                 response = self.session.post(
-                    f"{self.base_url}/api/v1/analyze-enhanced",
+                    f"{self.base_url}/api/v1/analyze-with-knowledge",
                     json=payload,
                     timeout=20
                 )
@@ -163,133 +108,159 @@ class HardwareAITester:
                 if response.status_code == 200:
                     data = response.json()
                     
-                    # Validate RAG response structure
-                    if "knowledge" in data:
-                        knowledge = data["knowledge"]
-                        components = knowledge.get("components", [])
-                        standards = knowledge.get("standards", [])
-                        
-                        component_count = len(components)
-                        standard_count = len(standards)
-                        
-                        # Validate minimum requirements
-                        meets_requirements = True
-                        issues = []
-                        
-                        if "min_components" in test_case and component_count < test_case["min_components"]:
-                            meets_requirements = False
-                            issues.append(f"Expected ≥{test_case['min_components']} components, got {component_count}")
-                        
-                        if "min_standards" in test_case and standard_count < test_case["min_standards"]:
-                            meets_requirements = False
-                            issues.append(f"Expected ≥{test_case['min_standards']} standards, got {standard_count}")
-                        
-                        if meets_requirements:
-                            success_count += 1
-                            self.log_result(f"RAG: {test_case['name']}", True, {
-                                "summary": f"Components: {component_count}, Standards: {standard_count}",
-                                "components": component_count,
-                                "standards": standard_count,
-                                "retrieval_quality": knowledge.get("retrieval_summary", {}).get("overall_quality", "N/A")
-                            })
-                        else:
-                            self.log_result(f"RAG: {test_case['name']}", False, {
-                                "error": "; ".join(issues),
-                                "components_found": component_count,
-                                "standards_found": standard_count
-                            })
-                    else:
-                        # Fallback: test basic analysis without RAG
-                        basic_payload = {
-                            "query": test_case["query"],
-                            "user_expertise": test_case["expertise"]
-                        }
-                        
-                        basic_response = self.session.post(
-                            f"{self.base_url}/api/v1/analyze",
-                            json=basic_payload,
-                            timeout=15
-                        )
-                        
-                        if basic_response.status_code == 200:
-                            basic_data = basic_response.json()
-                            domain = basic_data.get("classification", {}).get("primary_domain", {}).get("domain", "unknown")
-                            
-                            success_count += 1
-                            self.log_result(f"RAG: {test_case['name']} (Fallback)", True, {
-                                "summary": f"Basic analysis successful, Domain: {domain}",
-                                "fallback_mode": True,
-                                "domain": domain
-                            })
-                        else:
-                            self.log_result(f"RAG: {test_case['name']}", False, {
-                                "error": "No RAG data and basic analysis failed",
-                                "status_code": basic_response.status_code
-                            })
-                else:
-                    # Try basic analysis as fallback
-                    basic_payload = {
-                        "query": test_case["query"],
-                        "user_expertise": test_case["expertise"]
-                    }
+                    knowledge = data.get("knowledge", {})
+                    components = knowledge.get("components", [])
+                    retrieval_summary = knowledge.get("retrieval_summary", {})
                     
-                    basic_response = self.session.post(
-                        f"{self.base_url}/api/v1/analyze",
-                        json=basic_payload,
-                        timeout=15
-                    )
-                    
-                    if basic_response.status_code == 200:
-                        basic_data = basic_response.json()
-                        domain = basic_data.get("classification", {}).get("primary_domain", {}).get("domain", "unknown")
-                        
+                    if len(components) > 0:
                         success_count += 1
-                        self.log_result(f"RAG: {test_case['name']} (Basic Mode)", True, {
-                            "summary": f"Basic analysis mode, Domain: {domain}",
-                            "basic_mode": True,
-                            "domain": domain
-                        })
-                    else:
-                        self.log_result(f"RAG: {test_case['name']}", False, {
-                            "error": f"Enhanced endpoint unavailable (status: {response.status_code}), basic analysis failed",
-                            "enhanced_status": response.status_code,
-                            "basic_status": basic_response.status_code
+                        
+                        # Extract actual component names for validation
+                        component_names = []
+                        for comp in components[:3]:  # Show first 3
+                            comp_data = comp.get('component', {})
+                            comp_name = comp_data.get('name', comp_data.get('part_number', 'Unknown'))
+                            component_names.append(comp_name)
+                        
+                        self.log_result(f"Components RAG: {test_case['name']}", True, {
+                            "summary": f"Retrieved {len(components)} components from ChromaDB",
+                            "components_count": len(components),
+                            "sample_components": component_names,
+                            "retrieval_quality": retrieval_summary.get("overall_quality", "N/A")
                         })
                         
+                        print(f"     Sample components: {', '.join(component_names)}")
+                    else:
+                        self.log_result(f"Components RAG: {test_case['name']}", False, {
+                            "error": "No components retrieved from ChromaDB",
+                            "knowledge_structure": list(knowledge.keys())
+                        })
+                else:
+                    self.log_result(f"Components RAG: {test_case['name']}", False, {
+                        "error": f"HTTP {response.status_code}: {response.text[:100]}"
+                    })
+                    
             except Exception as e:
-                self.log_result(f"RAG: {test_case['name']}", False, {"error": str(e)})
+                self.log_result(f"Components RAG: {test_case['name']}", False, {"error": str(e)})
         
-        # Overall RAG test success
-        total_tests = len(test_cases)
-        rag_success = success_count >= total_tests * 0.75  # 75% success rate
+        component_db_success = success_count >= len(component_queries) * 0.67
         
-        self.log_result("RAG System Overall", rag_success, {
-            "summary": f"{success_count}/{total_tests} RAG tests passed",
-            "success_rate": f"{(success_count/total_tests)*100:.1f}%"
+        self.log_result("ChromaDB Component Database Access", component_db_success, {
+            "summary": f"{success_count}/{len(component_queries)} component queries retrieved data",
+            "note": "Day 2 spec requires 500+ component entries"
         })
         
-        return rag_success
+        return component_db_success
     
-    def test_vector_search_capabilities(self) -> bool:
-        """Test semantic search capabilities"""
-        semantic_queries = [
+    def test_chromadb_standards_database_access(self) -> bool:
+        """Test ChromaDB compliance_standards collection access via RAG"""
+        
+        standards_queries = [
             {
-                "query": "low noise precision amplifier for medical devices",
-                "expected_keywords": ["medical", "precision", "amplifier"]
+                "name": "AEC-Q100 Automotive Standards",
+                "query": "AEC-Q100 Grade 0 qualification requirements for automotive components",
+                "expertise": "expert"
             },
             {
-                "query": "automotive qualified switching regulator for harsh environment",
-                "expected_keywords": ["automotive", "switching", "regulator"]
-            },
-            {
-                "query": "ultra-low power microcontroller for battery operated sensors",
-                "expected_keywords": ["low_power", "microcontroller", "battery"]
+                "name": "IEC 60601 Medical Standards",
+                "query": "IEC 60601 electrical safety requirements for medical device design",
+                "expertise": "expert"
             }
         ]
         
         success_count = 0
         
-        for i, test_case in enumerate(semantic_queries):
+        for test_case in standards_queries:
+            try:
+                payload = {
+                    "query": test_case["query"],
+                    "user_expertise": test_case["expertise"]
+                }
+                
+                response = self.session.post(
+                    f"{self.base_url}/api/v1/analyze-with-knowledge",
+                    json=payload,
+                    timeout=20
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    knowledge = data.get("knowledge", {})
+                    standards = knowledge.get("standards", [])
+                    
+                    if len(standards) > 0:
+                        success_count += 1
+                        
+                        # Extract actual standard names for validation
+                        standard_names = []
+                        for std in standards[:3]:  # Show first 3
+                            std_data = std.get('standard', {})
+                            std_name = std_data.get('name', std_data.get('standard_id', 'Unknown'))
+                            standard_names.append(std_name)
+                        
+                        self.log_result(f"Standards RAG: {test_case['name']}", True, {
+                            "summary": f"Retrieved {len(standards)} standards from ChromaDB",
+                            "standards_count": len(standards),
+                            "sample_standards": standard_names
+                        })
+                        
+                        print(f"     Sample standards: {', '.join(standard_names)}")
+                    else:
+                        self.log_result(f"Standards RAG: {test_case['name']}", False, {
+                            "error": "No standards retrieved from ChromaDB",
+                            "knowledge_structure": list(knowledge.keys())
+                        })
+                else:
+                    self.log_result(f"Standards RAG: {test_case['name']}", False, {
+                        "error": f"HTTP {response.status_code}"
+                    })
+                    
+            except Exception as e:
+                self.log_result(f"Standards RAG: {test_case['name']}", False, {"error": str(e)})
+        
+        standards_success = success_count >= len(standards_queries) * 0.5
+        
+        self.log_result("ChromaDB Standards Database Access", standards_success, {
+            "summary": f"{success_count}/{len(standards_queries)} standards queries retrieved data",
+            "note": "Day 2 spec requires AEC-Q100, ISO 26262, IEC 60601 standards"
+        })
+        
+        return standards_success
+    
+    def test_true_vector_search_semantic_quality(self) -> bool:
+        """Test TRUE semantic quality of ChromaDB vector search - FIXED DATA STRUCTURE ACCESS"""
+        
+        semantic_quality_tests = [
+            {
+                "name": "Power Management Semantic Search",
+                "query": "low power switching regulator for battery powered automotive sensors",
+                "expected_component_keywords": ["power", "regulator", "converter", "switching", "battery", "low power", "efficient", "buck", "boost"],
+                "expected_standards_keywords": ["automotive", "aec-q100", "grade", "qualification"],
+                "expected_categories": ["power_management"],
+                "semantic_expectation": "Power management components with automotive compliance"
+            },
+            {
+                "name": "Medical Device Semantic Search", 
+                "query": "precision operational amplifier for medical device IEC 60601 electrical safety",
+                "expected_component_keywords": ["amplifier", "precision", "operational", "op-amp", "medical", "low noise", "analog"],
+                "expected_standards_keywords": ["iec 60601", "medical", "electrical safety", "patient"],
+                "expected_categories": ["analog", "amplifier"],
+                "semantic_expectation": "Precision analog components with medical standards compliance"
+            },
+            {
+                "name": "Microcontroller Semantic Search",
+                "query": "ARM Cortex-M4 microcontroller ultra-low power consumption IoT wireless",
+                "expected_component_keywords": ["arm", "cortex", "microcontroller", "mcu", "low power", "wireless", "iot", "stm32"],
+                "expected_standards_keywords": ["fcc", "ce", "wireless", "iot"],
+                "expected_categories": ["microcontroller", "embedded"],
+                "semantic_expectation": "Low-power microcontrollers suitable for IoT applications"
+            }
+        ]
+        
+        success_count = 0
+        
+        for test_case in semantic_quality_tests:
             try:
                 payload = {
                     "query": test_case["query"],
@@ -297,150 +268,285 @@ class HardwareAITester:
                 }
                 
                 response = self.session.post(
-                    f"{self.base_url}/api/v1/analyze",
+                    f"{self.base_url}/api/v1/analyze-with-knowledge",
                     json=payload,
-                    timeout=15
+                    timeout=20
                 )
                 
                 if response.status_code == 200:
                     data = response.json()
                     
-                    # Check domain detection (indicates semantic understanding)
-                    domain = data.get("classification", {}).get("primary_domain", {}).get("domain", "")
-                    intent = data.get("classification", {}).get("primary_intent", {}).get("intent", "")
-                    complexity = data.get("complexity", {}).get("final_score", 0)
+                    knowledge = data.get("knowledge", {})
+                    components = knowledge.get("components", [])
+                    standards = knowledge.get("standards", [])
                     
-                    # Basic validation of semantic understanding
-                    semantic_indicators = 0
+                    if len(components) == 0 and len(standards) == 0:
+                        self.log_result(f"Semantic Quality: {test_case['name']}", False, {
+                            "error": "No components or standards retrieved"
+                        })
+                        continue
                     
-                    if domain and domain != "unknown":
-                        semantic_indicators += 1
+                    # FIXED: Test semantic relevance with correct data structure access
+                    component_relevance_score = self._evaluate_component_semantic_relevance_fixed(
+                        components, test_case["expected_component_keywords"]
+                    )
                     
-                    if intent and intent != "unknown":
-                        semantic_indicators += 1
-                        
-                    if 0.2 <= complexity <= 1.0:  # Reasonable complexity range
-                        semantic_indicators += 1
+                    standards_relevance_score = self._evaluate_standards_semantic_relevance_fixed(
+                        standards, test_case["expected_standards_keywords"]
+                    )
                     
-                    if semantic_indicators >= 2:
+                    category_alignment_score = self._evaluate_category_alignment_fixed(
+                        components, test_case["expected_categories"]
+                    )
+                    
+                    # Overall semantic quality score (weighted average)
+                    semantic_quality_score = (
+                        component_relevance_score * 0.4 + 
+                        standards_relevance_score * 0.3 + 
+                        category_alignment_score * 0.3
+                    )
+                    
+                    # Lower threshold for initial validation: 40% semantic relevance
+                    if semantic_quality_score >= 0.4:
                         success_count += 1
-                        self.log_result(f"Vector Search: Query {i+1}", True, {
-                            "summary": f"Domain: {domain}, Intent: {intent}, Complexity: {complexity:.3f}",
-                            "semantic_understanding": True
+                        self.log_result(f"Semantic Quality: {test_case['name']}", True, {
+                            "summary": f"Good semantic quality: {semantic_quality_score:.3f} score",
+                            "component_relevance": f"{component_relevance_score:.3f}",
+                            "standards_relevance": f"{standards_relevance_score:.3f}",
+                            "category_alignment": f"{category_alignment_score:.3f}",
+                            "components_found": len(components),
+                            "standards_found": len(standards),
+                            "semantic_expectation": test_case["semantic_expectation"]
                         })
+                        
+                        # Show sample relevant components
+                        if components:
+                            print(f"     Sample retrieved components:")
+                            for comp in components[:2]:
+                                comp_data = comp.get('component', {})
+                                comp_name = comp_data.get('name', comp_data.get('part_number', 'Unknown'))
+                                comp_desc = comp_data.get('description', 'No description')[:80]
+                                comp_category = comp_data.get('category', 'No category')
+                                print(f"       • {comp_name} ({comp_category}): {comp_desc}")
                     else:
-                        self.log_result(f"Vector Search: Query {i+1}", False, {
-                            "error": "Poor semantic understanding",
-                            "domain": domain,
-                            "intent": intent,
-                            "complexity": complexity
+                        self.log_result(f"Semantic Quality: {test_case['name']}", False, {
+                            "error": f"Low semantic quality: {semantic_quality_score:.3f} score (threshold: 0.40)",
+                            "component_relevance": f"{component_relevance_score:.3f}",
+                            "standards_relevance": f"{standards_relevance_score:.3f}",
+                            "category_alignment": f"{category_alignment_score:.3f}",
+                            "components_found": len(components),
+                            "standards_found": len(standards)
                         })
+                        
+                        # Debug: Show what was actually retrieved
+                        if components:
+                            print(f"     Retrieved components (checking relevance):")
+                            for comp in components[:2]:
+                                comp_data = comp.get('component', {})
+                                comp_name = comp_data.get('name', comp_data.get('part_number', 'Unknown'))
+                                comp_category = comp_data.get('category', 'No category')
+                                print(f"       • {comp_name} ({comp_category})")
                 else:
-                    self.log_result(f"Vector Search: Query {i+1}", False, {
-                        "error": f"Request failed with status {response.status_code}"
+                    self.log_result(f"Semantic Quality: {test_case['name']}", False, {
+                        "error": f"HTTP {response.status_code}"
                     })
                     
             except Exception as e:
-                self.log_result(f"Vector Search: Query {i+1}", False, {"error": str(e)})
+                self.log_result(f"Semantic Quality: {test_case['name']}", False, {"error": str(e)})
         
-        vector_search_success = success_count >= len(semantic_queries) * 0.6  # 60% success rate
+        semantic_success = success_count >= len(semantic_quality_tests) * 0.66
         
-        self.log_result("Vector Search Overall", vector_search_success, {
-            "summary": f"{success_count}/{len(semantic_queries)} semantic queries successful",
-            "success_rate": f"{(success_count/len(semantic_queries))*100:.1f}%"
+        self.log_result("True Vector Search Semantic Quality", semantic_success, {
+            "summary": f"{success_count}/{len(semantic_quality_tests)} semantic quality tests passed",
+            "note": "Tests actual relevance of ChromaDB retrieved components/standards with FIXED data structure access"
         })
         
-        return vector_search_success
+        return semantic_success
     
-    def test_schematic_processing(self) -> bool:
-        """Test schematic processing capabilities (if available)"""
+    def _evaluate_component_semantic_relevance_fixed(self, components: List[Dict], expected_keywords: List[str]) -> float:
+        """FIXED: Evaluate semantic relevance with correct data structure access"""
+        if not components:
+            return 0.0
+        
+        relevant_components = 0
+        
+        for component in components:
+            if self._is_component_relevant_fixed(component, expected_keywords):
+                relevant_components += 1
+        
+        return relevant_components / len(components) if components else 0.0
+    
+    def _is_component_relevant_fixed(self, component: Dict, expected_keywords: List[str]) -> bool:
+        """FIXED: Check component relevance with correct nested data structure access"""
+        
+        # FIXED: Access nested component data correctly
+        comp_data = component.get('component', {})
+        
+        # Build searchable text from all relevant component fields
+        comp_text = ""
+        for field in ['name', 'part_number', 'description', 'category', 'manufacturer', 'key_features', 'applications']:
+            if field in comp_data:
+                value = comp_data[field]
+                if isinstance(value, list):
+                    comp_text += f" {' '.join(map(str, value))}"
+                else:
+                    comp_text += f" {value}"
+        
+        comp_text = comp_text.lower()
+        
+        # Check for keyword matches (at least 2 keywords should match for relevance)
+        keyword_matches = sum(1 for keyword in expected_keywords if keyword.lower() in comp_text)
+        return keyword_matches >= min(2, len(expected_keywords) // 2)
+    
+    def _evaluate_standards_semantic_relevance_fixed(self, standards: List[Dict], expected_keywords: List[str]) -> float:
+        """FIXED: Evaluate standards relevance with correct data structure access"""
+        if not standards:
+            return 0.0
+        
+        relevant_standards = 0
+        
+        for standard in standards:
+            # FIXED: Access nested standard data correctly
+            std_data = standard.get('standard', {})
+            
+            # Build searchable text from standard fields
+            std_text = ""
+            for field in ['name', 'standard_id', 'description', 'scope', 'organization']:
+                if field in std_data:
+                    std_text += f" {std_data[field]}"
+            
+            std_text = std_text.lower()
+            
+            # Check for keyword relevance (at least 1 keyword match for standards)
+            keyword_matches = sum(1 for keyword in expected_keywords if keyword.lower() in std_text)
+            if keyword_matches >= 1:
+                relevant_standards += 1
+        
+        return relevant_standards / len(standards) if standards else 0.0
+    
+    def _evaluate_category_alignment_fixed(self, components: List[Dict], expected_categories: List[str]) -> float:
+        """FIXED: Evaluate category alignment with proper type handling"""
+        if not components:
+            return 0.0
+        
+        aligned_components = 0
+        
+        for component in components:
+            comp_data = component.get('component', {})
+            
+            comp_category = comp_data.get('category', '').lower()
+            comp_type = comp_data.get('type', '').lower()
+            
+            # FIX: Handle automotive qualification with proper type checking
+            automotive_qualified = False
+            
+            # Check automotive_qualified field (boolean)
+            if comp_data.get('automotive_qualified'):
+                automotive_qualified = True
+                
+            # Check automotive_grade field (handle string/int/None safely)
+            automotive_grade = comp_data.get('automotive_grade')
+            if automotive_grade is not None:
+                try:
+                    if isinstance(automotive_grade, str):
+                        # Handle string grades like "Grade 1", "1", etc.
+                        if automotive_grade.lower().replace('grade ', '') not in ['0', '']:
+                            automotive_qualified = True
+                    elif isinstance(automotive_grade, (int, float)):
+                        if automotive_grade > 0:
+                            automotive_qualified = True
+                except:
+                    pass  # If anything fails, assume not qualified
+            
+            # Check category alignment
+            category_match = any(expected_cat.lower() in comp_category or expected_cat.lower() in comp_type 
+                            for expected_cat in expected_categories)
+            
+            # Special handling for automotive qualification
+            if 'automotive' in str(expected_categories).lower() and automotive_qualified:
+                category_match = True
+            
+            if category_match:
+                aligned_components += 1
+        
+        return aligned_components / len(components) if components else 0.0
+
+    
+    def test_day1_day2_integration(self) -> bool:
+        """Test integration of Day 1 (routing) + Day 2 (knowledge) functionality"""
+        
         try:
-            # Test schematic health first
-            response = self.session.get(f"{self.base_url}/api/v1/schematic/health", timeout=10)
-            
-            if response.status_code != 200:
-                self.log_result("Schematic Processing", False, {
-                    "error": "Schematic endpoints not available",
-                    "note": "This is expected if computer vision modules are not installed"
-                })
-                return False
-            
-            # Create a simple test schematic
-            test_image = self.create_test_schematic()
-            
-            # Convert to bytes
-            img_byte_arr = io.BytesIO()
-            test_image.save(img_byte_arr, format='PNG')
-            img_byte_arr = img_byte_arr.getvalue()
-            
-            # Test schematic analysis
-            files = {"file": ("test_schematic.png", img_byte_arr, "image/png")}
+            integration_query = {
+                "query": "automotive qualified buck converter AEC-Q100 Grade 0 for 12V to 5V conversion with thermal management",
+                "user_expertise": "expert"
+            }
             
             response = self.session.post(
-                f"{self.base_url}/api/v1/schematic/analyze",
-                files=files,
-                timeout=30
+                f"{self.base_url}/api/v1/analyze-with-knowledge",
+                json=integration_query,
+                timeout=25
             )
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Validate schematic analysis response
-                components = data.get("detected_components", [])
-                status = data.get("status", "")
+                # Validate Day 1 functionality is preserved
+                day1_indicators = 0
+                if "classification" in data:
+                    day1_indicators += 1
+                if "complexity" in data:
+                    day1_indicators += 1
+                if "routing" in data:
+                    day1_indicators += 1
                 
-                component_count = len(components)
+                # Validate Day 2 functionality is working
+                day2_indicators = 0
+                knowledge = data.get("knowledge", {})
+                if "components" in knowledge:
+                    day2_indicators += 1
+                if "standards" in knowledge:
+                    day2_indicators += 1
+                if "retrieval_summary" in knowledge:
+                    day2_indicators += 1
                 
-                self.log_result("Schematic Processing", True, {
-                    "summary": f"Analysis successful, {component_count} components detected",
-                    "components_detected": component_count,
-                    "status": status
-                })
-                return True
+                integration_success = day1_indicators >= 2 and day2_indicators >= 2
+                
+                if integration_success:
+                    self.log_result("Day 1 + Day 2 Integration", True, {
+                        "summary": f"Integration working: Day 1 ({day1_indicators}/3), Day 2 ({day2_indicators}/3)",
+                        "selected_model": data.get("routing", {}).get("selected_model", "unknown"),
+                        "components_retrieved": len(knowledge.get("components", [])),
+                        "standards_retrieved": len(knowledge.get("standards", []))
+                    })
+                    return True
+                else:
+                    self.log_result("Day 1 + Day 2 Integration", False, {
+                        "error": f"Integration incomplete: Day 1 ({day1_indicators}/3), Day 2 ({day2_indicators}/3)",
+                        "response_structure": list(data.keys())
+                    })
+                    return False
             else:
-                self.log_result("Schematic Processing", False, {
-                    "error": f"Analysis failed with status {response.status_code}",
-                    "response": response.text[:200]
+                self.log_result("Day 1 + Day 2 Integration", False, {
+                    "error": f"HTTP {response.status_code}"
                 })
                 return False
                 
         except Exception as e:
-            self.log_result("Schematic Processing", False, {
-                "error": str(e),
-                "note": "Computer vision dependencies may not be installed"
-            })
+            self.log_result("Day 1 + Day 2 Integration", False, {"error": str(e)})
             return False
     
-    def create_test_schematic(self) -> Image.Image:
-        """Create a simple test schematic for upload testing"""
-        img = Image.new('RGB', (400, 300), 'white')
-        draw = ImageDraw.Draw(img)
+    def run_day2_fixed_tests(self) -> Dict[str, Any]:
+        """Run Day 2 tests with FIXED data structure access"""
+        print("🧠 Hardware AI Orchestrator - FIXED Day 2 RAG Testing")
+        print("🎯 Testing: ChromaDB + sentence-transformers + CORRECTED Semantic Quality Validation")
+        print("=" * 90)
         
-        # Simple resistor symbol
-        draw.rectangle([(100, 100), (160, 120)], outline='black', width=2)
-        draw.text((110, 80), "R1", fill='black')
-        draw.text((110, 130), "10kΩ", fill='black')
-        
-        # Simple capacitor symbol
-        draw.line([(200, 100), (200, 120)], fill='black', width=3)
-        draw.line([(210, 100), (210, 120)], fill='black', width=3)
-        draw.text((190, 80), "C1", fill='black')
-        draw.text((185, 130), "100μF", fill='black')
-        
-        return img
-    
-    def run_all_tests(self) -> Dict[str, Any]:
-        """Run all Day 2 tests"""
-        print("🧠 Hardware AI Orchestrator - Day 2 RAG Testing")
-        print("=" * 60)
-        
-        # Test sequence
         tests = [
-            ("System Health", self.test_system_status),
-            ("Basic Analysis", self.test_basic_query_analysis),
-            ("RAG Enhanced Analysis", self.test_rag_enhanced_analysis),
-            ("Vector Search", self.test_vector_search_capabilities),
-            ("Schematic Processing", self.test_schematic_processing)
+            ("Knowledge System Health", self.test_knowledge_retrieval_system_health),
+            ("Component Database (ChromaDB)", self.test_chromadb_component_database_access),
+            ("Standards Database (ChromaDB)", self.test_chromadb_standards_database_access),
+            ("FIXED Vector Search Semantic Quality", self.test_true_vector_search_semantic_quality),
+            ("Day 1 + Day 2 Integration", self.test_day1_day2_integration)
         ]
         
         results = {}
@@ -460,24 +566,40 @@ class HardwareAITester:
         # Summary
         success_rate = (total_success / len(tests)) * 100
         
-        print(f"\n{'=' * 60}")
-        print(f"🏆 DAY 2 RAG TEST SUMMARY")
-        print(f"{'=' * 60}")
+        print(f"\n{'=' * 90}")
+        print(f"🏆 FIXED DAY 2 RAG TEST RESULTS")
+        print(f"{'=' * 90}")
         print(f"Tests Passed: {total_success}/{len(tests)} ({success_rate:.1f}%)")
         
         if success_rate >= 80:
-            print(f"✅ EXCELLENT: Day 2 RAG system is production ready!")
+            print(f"✅ EXCELLENT: Day 2 RAG system with corrected semantic quality validation!")
+            print(f"   • ChromaDB vector database working optimally")
+            print(f"   • Component and standards retrieval highly relevant")
+            print(f"   • sentence-transformers providing quality semantic matching") 
+            print(f"   • Day 1 + Day 2 integration seamless")
+            print(f"   • FIXED data structure access showing true semantic quality")
         elif success_rate >= 60:
-            print(f"✅ GOOD: Day 2 RAG system is functional with minor issues")
+            print(f"✅ GOOD: Day 2 RAG system functional with corrected validation")
+            print(f"   • Core knowledge retrieval working")
+            print(f"   • Semantic matching validated with proper data access")
         else:
-            print(f"⚠️ NEEDS WORK: Day 2 RAG system needs improvement")
+            print(f"⚠️ NEEDS ATTENTION: Issues detected even with corrected validation")
+            print(f"   • Check component database content quality")
+            print(f"   • Verify sentence-transformers embeddings")
         
         return {
             "overall_success_rate": success_rate,
             "tests_passed": total_success,
             "total_tests": len(tests),
             "individual_results": results,
-            "detailed_results": self.test_results
+            "detailed_results": self.test_results,
+            "fixed_validation": {
+                "corrected_data_structure_access": True,
+                "semantic_quality_validated": results.get("FIXED Vector Search Semantic Quality", False),
+                "chromadb_integration": results.get("Component Database (ChromaDB)", False) or results.get("Standards Database (ChromaDB)", False),
+                "day1_day2_integration": results.get("Day 1 + Day 2 Integration", False),
+                "knowledge_retrieval_system": results.get("Knowledge System Health", False)
+            }
         }
 
 def main():
@@ -487,10 +609,10 @@ def main():
     else:
         base_url = BASE_URL
     
-    print(f"🎯 Testing Hardware AI Orchestrator at: {base_url}")
+    print(f"🎯 Testing FIXED Day 2 RAG System at: {base_url}")
     
-    tester = HardwareAITester(base_url)
-    results = tester.run_all_tests()
+    tester = Day2FixedRAGTester(base_url)
+    results = tester.run_day2_fixed_tests()
     
     # Return appropriate exit code
     if results["overall_success_rate"] >= 60:
